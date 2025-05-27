@@ -21,8 +21,8 @@ export default function Index() {
           Hoş geldin
         </Text>
         <Link href="/selectMove" asChild>
-          <Pressable style={{ backgroundColor: "#A8B545", padding: 12, borderRadius: 10, width: 200 }}>
-            <Text style={{ fontWeight: "bold", fontSize: 24, textAlign: "center", color: 'white' }}>Başla</Text>
+                  <Pressable style={{ backgroundColor: "#B0FF35", padding: 12, borderRadius: 10, width: 200 }}>
+            <Text style={{ fontWeight: "bold", fontSize: 24, textAlign: "center", color: 'black' }}>Başla</Text>
           </Pressable>
         </Link>
       </View>

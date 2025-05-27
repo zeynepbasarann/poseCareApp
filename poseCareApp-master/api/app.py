@@ -25,6 +25,7 @@ class Session:
         self.incorrect = 0
         self.temp_squat_angles = []
         self.last_status = ""
+        self.wrong_angles = []  # yeni eklendi
 
 
 
@@ -65,21 +66,24 @@ def analyze_squat(kpts, session: Session):
                 status = "✔ Doğru squat"
             else:
                 session.incorrect += 1
+                session.wrong_angles.extend(session.temp_squat_angles)
                 status = "❌ Yanlış squat"
-            session.temp_squat_angles.clear()
+            session.temp_squat_angles.clear()  # Temizleme bu blokta, hem doğru hem yanlışta
 
     return angle, status
+ 
 
 def analyze_bridge(kpts, session: Session):
-    # örnek: shoulder (6), hip (12), knee (14)
     angle = calculate_angle(kpts[6], kpts[12], kpts[14])
     if angle > 160:
         session.correct += 1
         session.last_status = "✔ Doğru bridge"
     else:
         session.incorrect += 1
+        session.wrong_angles.append(angle)  # hatalı açı kaydı eklendi
         session.last_status = "❌ Yanlış bridge"
     return angle, session.last_status
+
 
 @app.route('/pose', methods=['POST'])
 def pose():
@@ -107,21 +111,22 @@ def pose():
         if exercise == "bridge":
             angle, status = analyze_bridge(kpts, bridge_session)
             return jsonify({
-                "angle": angle,
-                "status": status,
-                "correct": bridge_session.correct,
-                "incorrect": bridge_session.incorrect
-         })
+        "angle": angle,
+        "status": status or "",
+        "correct": bridge_session.correct,
+        "incorrect": bridge_session.incorrect,
+        "wrong_angles": bridge_session.wrong_angles[-5:]  # bridge için son 5 yanlış açı
+    })
         else:
             angle, status = analyze_squat(kpts, squat_session)
             return jsonify({
-                "angle": angle,
-                "status": status or "",  # None yerine boş string
-                "correct": squat_session.correct,
-                "incorrect": squat_session.incorrect
-    
+        "angle": angle,
+        "status": status or "",
+        "correct": squat_session.correct,
+        "incorrect": squat_session.incorrect,
+        "wrong_angles": squat_session.wrong_angles[-5:]  # squat için son 5 yanlış açı
+    })
 
-        })
 
 
     except Exception as e:

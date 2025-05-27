@@ -1,3 +1,4 @@
+import { useLayoutEffect } from 'react';
 import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -13,8 +14,10 @@ export default function ExerciseCameraScreen() {
     const [status, setStatus] = useState<string | null>(null);
     const [angle, setAngle] = useState<number | null>(null);
     const [counts, setCounts] = useState({ correct: 0, incorrect: 0 });
+    const [wrongAngles, setWrongAngles] = useState<number[]>([]);
     const targetCount = parseInt(target as string, 10) || 10;
     const router = useRouter();
+
     const toggleCamera = () => {
         setFacing(prev => (prev === 'front' ? 'back' : 'front'));
     };
@@ -47,17 +50,24 @@ export default function ExerciseCameraScreen() {
                 status?: string;
                 correct: number;
                 incorrect: number;
+                wrong_angles?: number[];
             };
 
             if (typeof data.angle === 'number') setAngle(data.angle);
             if (typeof data.status === 'string') setStatus(data.status);
             setCounts({ correct: data.correct, incorrect: data.incorrect });
+
+            if (Array.isArray(data.wrong_angles)) {
+                setWrongAngles(data.wrong_angles);
+            }
+
         } catch (err) {
             console.error('Sunucu hatası:', err);
         } finally {
             isCapturing = false;
         }
     };
+
     useEffect(() => {
         fetch('http://192.168.1.105:5001/reset_session', {
             method: 'POST',
@@ -66,25 +76,35 @@ export default function ExerciseCameraScreen() {
                 setCounts({ correct: 0, incorrect: 0 });
                 setAngle(null);
                 setStatus(null);
+                setWrongAngles([]);
             })
             .catch(console.error);
     }, []);
+    
+
+
     useEffect(() => {
         const interval = setInterval(() => {
             captureAndSendFrame();
-        }, 700); // her 0,7 saniyede bir
+        }, 700);
 
-        if (counts.correct >= targetCount) {
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        if (counts.correct >= targetCount && wrongAngles.length >= 0) {
             router.replace({
                 pathname: "/completed",
                 params: {
                     correct: counts.correct.toString(),
                     incorrect: counts.incorrect.toString(),
                     move: exercise as string,
+                    wrong_angles: JSON.stringify(wrongAngles),
                 },
             });
         }
-    }, [counts.correct]);
+    }, [counts.correct, wrongAngles]);
+
 
     if (!permission?.granted) {
         return (
@@ -103,8 +123,28 @@ export default function ExerciseCameraScreen() {
                 options={{
                     title: "Pose Care",
                     contentStyle: { backgroundColor: "#000" },
+                    headerRight: () => (
+                        <TouchableOpacity
+                            onPress={() =>
+                                router.replace({
+                                    pathname: "/completed",
+                                    params: {
+                                        correct: counts.correct.toString(),
+                                        incorrect: counts.incorrect.toString(),
+                                        move: exercise as string,
+                                        wrong_angles: JSON.stringify(wrongAngles),
+                                    },
+                                })
+                            }
+                        >
+                            <Text style={{ color: '#A8B545', marginRight: 15, fontWeight: 'bold', fontSize: 16 }}>
+                                Bitir
+                            </Text>
+                        </TouchableOpacity>
+                    ),
                 }}
             />
+
             <View style={styles.container}>
                 <CameraView
                     ref={cameraRef}
@@ -122,7 +162,6 @@ export default function ExerciseCameraScreen() {
                         ✅  Doğru: {counts.correct}   ❌ Yanlış: {counts.incorrect}
                     </Text>
                 </View>
-
 
                 <View style={styles.overlayBottom}>
                     <TouchableOpacity onPress={toggleCamera} style={styles.button}>
@@ -176,7 +215,5 @@ const styles = StyleSheet.create({
     },
     cameraFrame: {
         ...StyleSheet.absoluteFillObject,
-
-    }
-
+    },
 });

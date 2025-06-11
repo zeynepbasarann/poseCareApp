@@ -34,7 +34,7 @@ export default function ExerciseCameraScreen() {
 
             if (!photo.base64) return;
 
-            const res = await fetch('http://192.168.1.104:5001/pose', {
+            const res = await fetch('http://192.168.1.106:5001/pose', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -69,7 +69,7 @@ export default function ExerciseCameraScreen() {
     };
 
     useEffect(() => {
-        fetch('http://192.168.1.104:5001/reset_session', {
+        fetch('http://192.168.1.106:5001/reset_session', {
             method: 'POST',
         })
             .then(() => {

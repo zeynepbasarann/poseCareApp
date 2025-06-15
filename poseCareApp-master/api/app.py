@@ -1,14 +1,34 @@
-# -- coding: utf-8 --
-
+import json
+import os
 from flask import Flask, request, jsonify
 from ultralytics import YOLO
 import base64
 import io
 from PIL import Image
 import numpy as np
+from datetime import datetime
 
+LOG_FILE = "logs.json"
+
+# JSON dosyasından logları oku/yaz
+def load_logs():
+    if os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+def save_logs(log_list):
+    with open(LOG_FILE, "w", encoding="utf-8") as f:
+        json.dump(log_list, f, ensure_ascii=False, indent=4)
+
+# Global log listesi
+logs = load_logs()
+
+# Flask ve model başlat
 app = Flask(__name__)
 model = YOLO("yolo11n-pose.pt")
+
+
 
 
 @app.before_request
@@ -131,13 +151,67 @@ def pose():
 
     except Exception as e:
         return jsonify({"angle": None, "status": f"Hata: {str(e)}", "correct": 0, "incorrect": 0})
-
+"""
 @app.route('/reset_session', methods=['POST'])
 def reset_session():
     global squat_session, bridge_session
     squat_session = Session()
     bridge_session = Session()
     return jsonify({"message": "Sessionlar sıfırlandı."})
+"""
+
+
+
+
+
+@app.route("/get_logs")
+def get_logs():
+    return jsonify(logs)
+
+@app.route('/reset_session', methods=['POST'])
+def reset_session():
+
+    global squat_session, bridge_session, logs
+    print("✅ reset_session çağrıldı")
+
+
+    now = datetime.now().isoformat()
+
+    # Squat hareketi varsa logla
+    if squat_session.correct + squat_session.incorrect > 0:
+        accuracy = round(
+            squat_session.correct / max(1, (squat_session.correct + squat_session.incorrect)) * 100, 2
+        )
+        logs.append({
+            "date": now,
+            "move": "squat",
+            "correct": squat_session.correct,
+            "incorrect": squat_session.incorrect,
+            "accuracy": accuracy
+        })
+
+    # Bridge hareketi varsa logla
+    if bridge_session.correct + bridge_session.incorrect > 0:
+        accuracy = round(
+            bridge_session.correct / max(1, (bridge_session.correct + bridge_session.incorrect)) * 100, 2
+        )
+        logs.append({
+            "date": now,
+            "move": "bridge",
+            "correct": bridge_session.correct,
+            "incorrect": bridge_session.incorrect,
+            "accuracy": accuracy
+        })
+        print(f"Squat → ✅ {squat_session.correct}, ❌ {squat_session.incorrect}")
+        print(f"Bridge → ✅ {bridge_session.correct}, ❌ {bridge_session.incorrect}")
+
+    save_logs(logs)  # <-- eklenen satır
+
+    squat_session = Session()
+    bridge_session = Session()
+
+    return jsonify({"message": "Sessionlar sıfırlandı."})
+
 
 
 if __name__ == '__main__':

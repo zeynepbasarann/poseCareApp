@@ -1,0 +1,37 @@
+[
+    {
+        "date": "2025-06-15T19:35:56.514082",
+        "move": "squat",
+        "correct": 0,
+        "incorrect": 2,
+        "accuracy": 0.0
+    },
+    {
+        "date": "2025-06-15T19:50:54.058068",
+        "move": "bridge",
+        "correct": 1,
+        "incorrect": 1,
+        "accuracy": 50.0
+    },
+    {
+        "date": "2025-06-15T20:22:07.229266",
+        "move": "bridge",
+        "correct": 1,
+        "incorrect": 0,
+        "accuracy": 100.0
+    },
+    {
+        "date": "2025-06-15T20:22:42.334479",
+        "move": "squat",
+        "correct": 1,
+        "incorrect": 1,
+        "accuracy": 50.0
+    },
+    {
+        "date": "2025-06-15T20:34:19.751329",
+        "move": "squat",
+        "correct": 2,
+        "incorrect": 0,
+        "accuracy": 100.0
+    }
+]

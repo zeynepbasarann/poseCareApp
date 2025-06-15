@@ -4,12 +4,11 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-let isCapturing = false;
-
 export default function ExerciseCameraScreen() {
     const { exercise, target } = useLocalSearchParams(); // squat / bridge
     const [permission, requestPermission] = useCameraPermissions();
     const cameraRef = useRef<CameraView | null>(null);
+    const isCapturingRef = useRef(false);
     const [facing, setFacing] = useState<CameraType>('front');
     const [status, setStatus] = useState<string | null>(null);
     const [angle, setAngle] = useState<number | null>(null);
@@ -18,13 +17,15 @@ export default function ExerciseCameraScreen() {
     const targetCount = parseInt(target as string, 10) || 10;
     const router = useRouter();
 
+    const BASE_URL = 'http://192.168.1.101:5001';
+
     const toggleCamera = () => {
-        setFacing(prev => (prev === 'front' ? 'back' : 'front'));
+        setFacing((prev) => (prev === 'front' ? 'back' : 'front'));
     };
 
     const captureAndSendFrame = async () => {
-        if (!cameraRef.current || isCapturing) return;
-        isCapturing = true;
+        if (!cameraRef.current || isCapturingRef.current) return;
+        isCapturingRef.current = true;
 
         try {
             const photo = await cameraRef.current.takePictureAsync({
@@ -34,7 +35,7 @@ export default function ExerciseCameraScreen() {
 
             if (!photo.base64) return;
 
-            const res = await fetch('http://192.168.1.106:5001/pose', {
+            const res = await fetch(`${BASE_URL}/pose`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -43,9 +44,12 @@ export default function ExerciseCameraScreen() {
                 }),
             });
 
-            if (!res.ok) return;
+            if (!res.ok) {
+                setStatus('Sunucu hatası: Yanıt alınamadı');
+                return;
+            }
 
-            const data = await res.json() as {
+            const data = (await res.json()) as {
                 angle?: number;
                 status?: string;
                 correct: number;
@@ -56,33 +60,28 @@ export default function ExerciseCameraScreen() {
             if (typeof data.angle === 'number') setAngle(data.angle);
             if (typeof data.status === 'string') setStatus(data.status);
             setCounts({ correct: data.correct, incorrect: data.incorrect });
-
-            if (Array.isArray(data.wrong_angles)) {
-                setWrongAngles(data.wrong_angles);
-            }
-
+            if (Array.isArray(data.wrong_angles)) setWrongAngles(data.wrong_angles);
         } catch (err) {
             console.error('Sunucu hatası:', err);
+            setStatus('Sunucu hatası: İstek başarısız');
         } finally {
-            isCapturing = false;
+            isCapturingRef.current = false;
         }
     };
 
+    // Component mount'ta session reset ve state sıfırlama
     useEffect(() => {
-        fetch('http://192.168.1.106:5001/reset_session', {
-            method: 'POST',
-        })
+        fetch(`${BASE_URL}/reset_session`, { method: 'POST' })
             .then(() => {
                 setCounts({ correct: 0, incorrect: 0 });
                 setAngle(null);
                 setStatus(null);
                 setWrongAngles([]);
             })
-            .catch(console.error);
+            .catch((e) => console.error('Reset error:', e));
     }, []);
-    
 
-
+    // 700ms'de bir capture ve gönderme
     useEffect(() => {
         const interval = setInterval(() => {
             captureAndSendFrame();
@@ -90,26 +89,36 @@ export default function ExerciseCameraScreen() {
 
         return () => clearInterval(interval);
     }, []);
-
     useEffect(() => {
-        if (counts.correct >= targetCount && wrongAngles.length >= 0) {
-            router.replace({
-                pathname: "/completed",
-                params: {
-                    correct: counts.correct.toString(),
-                    incorrect: counts.incorrect.toString(),
-                    move: exercise as string,
-                    wrong_angles: JSON.stringify(wrongAngles),
-                },
-            });
+        if (counts.correct >= targetCount) {
+            const resetAndRedirect = async () => {
+                try {
+                    await fetch(`${BASE_URL}/reset_session`, { method: 'POST' }); // await eklendi
+                } catch (e) {
+                    console.error('Reset error:', e);
+                } finally {
+                    router.replace({
+                        pathname: '/completed',
+                        params: {
+                            correct: counts.correct.toString(),
+                            incorrect: counts.incorrect.toString(),
+                            move: exercise as string,
+                            wrong_angles: JSON.stringify(wrongAngles),
+                        },
+                    });
+                }
+            };
+            resetAndRedirect();
         }
-    }, [counts.correct, wrongAngles]);
+    }, [counts.correct]);
 
 
+
+    // Kamera izni yoksa izin isteme ekranı
     if (!permission?.granted) {
         return (
             <View style={styles.centered}>
-                <Text style={{ color: "#fff" }}>Kamera izni gerekiyor</Text>
+                <Text style={{ color: '#fff' }}>Kamera izni gerekiyor</Text>
                 <TouchableOpacity onPress={requestPermission} style={styles.button}>
                     <Text style={styles.buttonText}>İzin Ver</Text>
                 </TouchableOpacity>
@@ -121,23 +130,36 @@ export default function ExerciseCameraScreen() {
         <>
             <Stack.Screen
                 options={{
-                    title: "Pose Care",
-                    contentStyle: { backgroundColor: "#000" },
+                    title: 'Pose Care',
+                    contentStyle: { backgroundColor: '#000' },
                     headerRight: () => (
                         <TouchableOpacity
-                            onPress={() =>
-                                router.replace({
-                                    pathname: "/completed",
-                                    params: {
-                                        correct: counts.correct.toString(),
-                                        incorrect: counts.incorrect.toString(),
-                                        move: exercise as string,
-                                        wrong_angles: JSON.stringify(wrongAngles),
-                                    },
-                                })
-                            }
+                            onPress={async () => {
+                                try {
+                                    await fetch(`${BASE_URL}/reset_session`, { method: 'POST' });
+                                } catch (error) {
+                                    console.error(error);
+                                } finally {
+                                    router.replace({
+                                        pathname: '/completed',
+                                        params: {
+                                            correct: counts.correct.toString(),
+                                            incorrect: counts.incorrect.toString(),
+                                            move: exercise as string,
+                                            wrong_angles: JSON.stringify(wrongAngles),
+                                        },
+                                    });
+                                }
+                            }}
                         >
-                            <Text style={{ color: '#B0FF35', marginRight: 15, fontWeight: 'bold', fontSize: 16 }}>
+                            <Text
+                                style={{
+                                    color: '#B0FF35',
+                                    marginRight: 15,
+                                    fontWeight: 'bold',
+                                    fontSize: 16,
+                                }}
+                            >
                                 Bitir
                             </Text>
                         </TouchableOpacity>
@@ -146,11 +168,7 @@ export default function ExerciseCameraScreen() {
             />
 
             <View style={styles.container}>
-                <CameraView
-                    ref={cameraRef}
-                    style={styles.cameraFrame}
-                    facing={facing}
-                />
+                <CameraView ref={cameraRef} style={styles.cameraFrame} facing={facing} />
 
                 <View style={styles.overlayTop}>
                     <Text style={styles.statusText}>Egzersiz: {exercise}</Text>
@@ -159,7 +177,7 @@ export default function ExerciseCameraScreen() {
                         <Text style={styles.statusText}>Açı: {angle.toFixed(2)}°</Text>
                     )}
                     <Text style={styles.countText}>
-                        ✅  Doğru: {counts.correct}   ❌ Yanlış: {counts.incorrect}
+                        ✅ Doğru: {counts.correct} ❌ Yanlış: {counts.incorrect}
                     </Text>
                 </View>
 
@@ -174,7 +192,7 @@ export default function ExerciseCameraScreen() {
 }
 
 export const options = {
-    title: "Egzersiz",
+    title: 'Egzersiz',
 };
 
 const styles = StyleSheet.create({

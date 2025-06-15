@@ -14,9 +14,32 @@ export default function CompletedScreen() {
         const incorrectCount = parseInt(incorrect as string) || 0;
         const total = correctCount + incorrectCount;
 
+        const movement = (move as string)?.toLowerCase();
+
         if (total > 0) {
             const acc = (correctCount / total) * 100;
-            setAccuracy(Number(acc.toFixed(1)));
+            const calculatedAccuracy = Number(acc.toFixed(1));
+            setAccuracy(calculatedAccuracy);
+
+            const logExercise = async () => {
+                try {
+                    await fetch("http://192.168.1.101:5001/log_exercise", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            date: new Date().toISOString(),
+                            move: movement,
+                            correct: correctCount,
+                            incorrect: incorrectCount,
+                            accuracy: calculatedAccuracy,
+                        }),
+                    });
+                } catch (err) {
+                    console.error("Egzersiz kaydı gönderilemedi:", err);
+                }
+            };
+
+            logExercise();
         }
 
         if (wrong_angles && typeof wrong_angles === 'string' && wrong_angles !== "[]") {
@@ -29,7 +52,7 @@ export default function CompletedScreen() {
                 let deepCount = 0;
 
                 angles.forEach((angle, index) => {
-                    if (move === 'squat') {
+                    if (movement === 'squat') {
                         if (angle < 60) {
                             newFeedback.push(`#${index + 1} tekrar: Daha fazla çömelmelisiniz (açı: ${angle.toFixed(1)}°).`);
                             lowCount++;
@@ -37,20 +60,20 @@ export default function CompletedScreen() {
                             newFeedback.push(`#${index + 1} tekrar: Fazla çömeldiniz (açı: ${angle.toFixed(1)}°).`);
                             deepCount++;
                         } else {
-                            newFeedback.push(`#${index + 1} tekrar: Uygun aralık dışı (açı: ${angle.toFixed(1)}°).`);
+                            newFeedback.push(`#${index + 1} tekrar: Hedef açı aralığında değil (açı: ${angle.toFixed(1)}°).`);
                         }
-                    } else if (move === 'bridge') {
+                    } else if (movement === 'bridge') {
                         if (angle < 20) {
                             newFeedback.push(`#${index + 1} tekrar: Kalçanızı yeterince kaldırmadınız (açı: ${angle.toFixed(1)}°).`);
                         } else if (angle > 60) {
                             newFeedback.push(`#${index + 1} tekrar: Fazla zorladınız (açı: ${angle.toFixed(1)}°).`);
                         } else {
-                            newFeedback.push(`#${index + 1} tekrar: Aralık dışı pozisyon (açı: ${angle.toFixed(1)}°).`);
+                            newFeedback.push(`#${index + 1} tekrar: Hedef açı aralığında değil (açı: ${angle.toFixed(1)}°).`);
                         }
                     }
                 });
 
-                if (move === 'squat') {
+                if (movement === 'squat') {
                     if (lowCount > deepCount) {
                         setAdvice("Genellikle yeterince çömelmemişsiniz. Dizlerinizi biraz daha bükmeye ve kalçanızı daha fazla aşağıya indirmeye çalışın.");
                     } else if (deepCount > lowCount) {
@@ -65,7 +88,8 @@ export default function CompletedScreen() {
                 console.warn("wrong_angles değeri çözümlenemedi:", error);
             }
         }
-    }, []);
+
+    }, [move, correct, incorrect, wrong_angles]);
 
     return (
         <View style={styles.container}>
@@ -149,7 +173,7 @@ const styles = StyleSheet.create({
     },
     adviceText: {
         fontSize: 16,
-        color: 'black', 
+        color: 'black',
     },
     button: {
         marginTop: 30,

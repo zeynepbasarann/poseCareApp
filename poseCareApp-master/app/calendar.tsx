@@ -1,19 +1,20 @@
-﻿import React, { useState, useEffect } from "react";
+﻿import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Stack } from 'expo-router';
+import React, { useEffect, useState } from "react";
 import {
-    View,
-    Text,
-    StyleSheet,
+    Button,
+    FlatList,
+    KeyboardAvoidingView,
     Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
     TextInput,
     TouchableOpacity,
-    FlatList,
-    Button,
-    Platform,
-    KeyboardAvoidingView,
-    ScrollView,
+    View
 } from "react-native";
 import { Calendar } from "react-native-calendars";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const EXERCISES = ["Squat", "Bridge"];
 
@@ -94,94 +95,120 @@ export default function CalendarScreen() {
     });
 
     return (
-        <View style={styles.container}>
-            <Calendar
-                onDayPress={(day) => setSelectedDate(day.dateString)}
-                markedDates={{
-                    ...markedDates,
-                    ...(selectedDate
-                        ? {
-                            [selectedDate]: {
-                                ...(markedDates[selectedDate] || {}),
-                                selected: true,
-                                selectedColor: "#00adf5",
-                            },
-                        }
-                        : {}),
-                }}
-                theme={{
-                    backgroundColor: "#000",
-                    calendarBackground: "#000",
-                    dayTextColor: "#fff",
-                    monthTextColor: "#fff",
-                    todayTextColor: "#B0FF35",
-                    selectedDayTextColor: "#000",
-                    arrowColor: "#B0FF35",
-                    textDisabledColor: "#555",
+        <>
+            <Stack.Screen
+                options={{
+                    title: "Takvim",
+                    headerStyle: { backgroundColor: "#000" },
+                    headerTintColor: "#fff",
+                    contentStyle: { backgroundColor: "#000" },
                 }}
             />
 
-            {selectedDate && (
-                <>
-                    <Text style={styles.heading}>Planlanan Egzersizler ({selectedDate})</Text>
-                    <FlatList
-                        data={plans[selectedDate] || []}
-                        keyExtractor={(item, index) => item.name + index}
-                        renderItem={({ item, index }) => (
-                            <TouchableOpacity
-                                style={[styles.planItem, item.done ? styles.done : styles.notDone]}
-                                onPress={() => toggleDone(selectedDate, index)}
-                            >
-                                <Text style={styles.exerciseText}>
-                                    {item.name} - {item.reps} tekrar
-                                </Text>
-                                <Text>{item.done ? "✅ Yapıldı" : "❌ Yapılmadı"}</Text>
-                            </TouchableOpacity>
-                        )}
-                    />
-                    <Button title="Egzersiz Ekle" onPress={() => setModalVisible(true)} />
-                </>
-            )}
+            <View style={styles.container}>
+                <Calendar
+                    onDayPress={(day) => setSelectedDate(day.dateString)}
+                    markedDates={{
+                        ...markedDates,
+                        ...(selectedDate
+                            ? {
+                                [selectedDate]: {
+                                    ...(markedDates[selectedDate] || {}),
+                                    selected: true,
+                                    selectedColor: "#00adf5",
+                                },
+                            }
+                            : {}),
+                    }}
+                    theme={{
+                        backgroundColor: "#000",
+                        calendarBackground: "#000",
+                        dayTextColor: "#fff",
+                        monthTextColor: "#fff",
+                        todayTextColor: "#B0FF35",
+                        selectedDayTextColor: "#000",
+                        arrowColor: "#B0FF35",
+                        textDisabledColor: "#555",
+                    }}
+                />
 
-            <Modal visible={modalVisible} transparent animationType="slide">
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : undefined}
-                    style={{ flex: 1 }}
-                >
-                    <ScrollView contentContainerStyle={styles.modal}>
-                        <Text style={styles.modalTitle}>Yeni Egzersiz - {selectedDate}</Text>
-
-                        <Text style={styles.label}>Egzersiz Seç:</Text>
-                        {EXERCISES.map((ex) => (
-                            <TouchableOpacity
-                                key={ex}
-                                style={[
-                                    styles.exerciseOption,
-                                    chosenExercise === ex && styles.selectedExercise,
-                                ]}
-                                onPress={() => setChosenExercise(ex)}
-                            >
-                                <Text>{ex}</Text>
-                            </TouchableOpacity>
-                        ))}
-
-                        <Text style={styles.label}>Tekrar Sayısı:</Text>
-                        <TextInput
-                            keyboardType="numeric"
-                            value={reps}
-                            onChangeText={setReps}
-                            style={styles.input}
-                            placeholder="ör: 10"
+                {selectedDate && (
+                    <>
+                        <Text style={styles.heading}>Planlanan Egzersizler ({selectedDate})</Text>
+                        <FlatList
+                            data={plans[selectedDate] || []}
+                            keyExtractor={(item, index) => item.name + index}
+                            renderItem={({ item, index }) => (
+                                <TouchableOpacity
+                                    style={[styles.planItem, item.done ? styles.done : styles.notDone]}
+                                    onPress={() => toggleDone(selectedDate, index)}
+                                >
+                                    <Text style={styles.exerciseText}>
+                                        {item.name} - {item.reps} tekrar
+                                    </Text>
+                                    <Text>{item.done ? "✅ Yapıldı" : "❌ Yapılmadı"}</Text>
+                                </TouchableOpacity>
+                            )}
                         />
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: '#FFFFFF', // İstediğin renk
+                                padding: 12,
+                                borderRadius: 8,
+                                alignItems: 'center',
+                                marginTop: 16,
+                                marginBottom: 30, // Alt boşluk
+                                marginHorizontal: 20
 
-                        <View style={styles.modalButtons}>
-                            <Button title="İptal" color="red" onPress={() => setModalVisible(false)} />
-                            <Button title="Ekle" onPress={addExercise} />
-                        </View>
-                    </ScrollView>
-                </KeyboardAvoidingView>
-            </Modal>
-        </View>
+                            }}
+                            onPress={() => setModalVisible(true)}
+                        >
+                            <Text style={{ color: 'black', fontSize: 16 }}>Egzersiz Ekle</Text>
+                        </TouchableOpacity>
+
+                    </>
+                )}
+
+                <Modal visible={modalVisible} transparent animationType="slide">
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === "ios" ? "padding" : undefined}
+                        style={{ flex: 1 }}
+                    >
+                        <ScrollView contentContainerStyle={styles.modal}>
+                            <Text style={styles.modalTitle}>Yeni Egzersiz - {selectedDate}</Text>
+
+                            <Text style={styles.label}>Egzersiz Seç:</Text>
+                            {EXERCISES.map((ex) => (
+                                <TouchableOpacity
+                                    key={ex}
+                                    style={[
+                                        styles.exerciseOption,
+                                        chosenExercise === ex && styles.selectedExercise,
+                                    ]}
+                                    onPress={() => setChosenExercise(ex)}
+                                >
+                                    <Text>{ex}</Text>
+                                </TouchableOpacity>
+                            ))}
+
+                            <Text style={styles.label}>Tekrar Sayısı:</Text>
+                            <TextInput
+                                keyboardType="numeric"
+                                value={reps}
+                                onChangeText={setReps}
+                                style={styles.input}
+                                placeholder="ör: 10"
+                            />
+
+                            <View style={styles.modalButtons}>
+                                <Button title="İptal" color="red" onPress={() => setModalVisible(false)} />
+                                <Button title="Ekle" onPress={addExercise} />
+                            </View>
+                        </ScrollView>
+                    </KeyboardAvoidingView>
+                </Modal>
+            </View>
+        </>
     );
 }
 

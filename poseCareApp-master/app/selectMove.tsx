@@ -26,9 +26,12 @@ export default function SelectMoveScreen() {
             <Stack.Screen
                 options={{
                     title: "Hareket Seç",
+                    headerStyle: { backgroundColor: "#000" },
+                    headerTintColor: "#fff",
                     contentStyle: { backgroundColor: "#000" },
                 }}
             />
+
             <View style={{ flex: 1, backgroundColor: "#000", padding: 24 }}>
                 <Text style={{ color: "#fff", fontSize: 22, marginBottom: 10 }}>Hareket Seç</Text>
 

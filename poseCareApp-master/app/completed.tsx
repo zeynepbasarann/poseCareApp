@@ -1,6 +1,6 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function CompletedScreen() {
     const { correct, incorrect, move, wrong_angles } = useLocalSearchParams();
@@ -92,37 +92,47 @@ export default function CompletedScreen() {
     }, [move, correct, incorrect, wrong_angles]);
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Egzersiz Tamamlandı 🎉</Text>
-            <Text style={styles.resultText}>🏋️ Hareket: {move}</Text>
-            <Text style={styles.resultText}>✅ Doğru Tekrar: {correct}</Text>
-            <Text style={styles.resultText}>❌ Hatalı Tekrar: {incorrect}</Text>
-            {accuracy !== null && (
-                <Text style={styles.resultText}>🎯 Doğruluk Oranı: {accuracy}%</Text>
-            )}
+        <>
+            <Stack.Screen
+                options={{
+                    title: "Egzersiz Sonucu",
+                    headerStyle: { backgroundColor: "#000" },
+                    headerTintColor: "#fff",
+                    contentStyle: { backgroundColor: "#000" },
+                }}
+            />
+            <View style={styles.container}>
+                <Text style={styles.title}>Egzersiz Tamamlandı 🎉</Text>
+                <Text style={styles.resultText}>🏋️ Hareket: {move}</Text>
+                <Text style={styles.resultText}>✅ Doğru Tekrar: {correct}</Text>
+                <Text style={styles.resultText}>❌ Hatalı Tekrar: {incorrect}</Text>
+                {accuracy !== null && (
+                    <Text style={styles.resultText}>🎯 Doğruluk Oranı: {accuracy}%</Text>
+                )}
 
-            <Text style={styles.sectionTitle}>📝 Geri Bildirim:</Text>
-            {feedback.length > 0 ? (
-                <ScrollView style={styles.feedbackContainer}>
-                    {feedback.map((item, idx) => (
-                        <Text key={idx} style={styles.feedbackItem}>• {item}</Text>
-                    ))}
-                </ScrollView>
-            ) : (
-                <Text style={styles.feedbackItem}>Tebrikler! Tüm hareketler doğru görünüyor. 🎯</Text>
-            )}
+                <Text style={styles.sectionTitle}>📝 Geri Bildirim:</Text>
+                {feedback.length > 0 ? (
+                    <ScrollView style={styles.feedbackContainer}>
+                        {feedback.map((item, idx) => (
+                            <Text key={idx} style={styles.feedbackItem}>• {item}</Text>
+                        ))}
+                    </ScrollView>
+                ) : (
+                    <Text style={styles.feedbackItem}>Tebrikler! Tüm hareketler doğru görünüyor. 🎯</Text>
+                )}
 
-            {advice && (
-                <View style={styles.adviceBox}>
-                    <Text style={styles.adviceTitle}>Genel Öneri 💡</Text>
-                    <Text style={styles.adviceText}>{advice}</Text>
-                </View>
-            )}
+                {advice && (
+                    <View style={styles.adviceBox}>
+                        <Text style={styles.adviceTitle}>Genel Öneri 💡</Text>
+                        <Text style={styles.adviceText}>{advice}</Text>
+                    </View>
+                )}
 
-            <TouchableOpacity style={styles.button} onPress={() => router.replace("/")}>
-                <Text style={styles.buttonText}>Ana Sayfaya Dön</Text>
-            </TouchableOpacity>
-        </View>
+                <TouchableOpacity style={styles.button} onPress={() => router.replace("/")}>
+                    <Text style={styles.buttonText}>Ana Sayfaya Dön</Text>
+                </TouchableOpacity>
+            </View>
+        </>
     );
 }
 

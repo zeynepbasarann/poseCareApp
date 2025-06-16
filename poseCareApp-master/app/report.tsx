@@ -1,7 +1,7 @@
-﻿import { useEffect, useState } from 'react';
-import { Text, View, StyleSheet, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
+﻿import { Stack } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-
 type Log = {
     date: string;
     move: string;
@@ -34,53 +34,63 @@ export default function ReportScreen() {
     const filteredLogs = logs.filter(log => log.move === selectedMove);
 
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.title}>📊 Egzersiz Raporu</Text>
+        <>
+            <Stack.Screen
+                options={{
+                    title: "Hareket Seç",
+                    headerStyle: { backgroundColor: "#000" },
+                    headerTintColor: "#fff",
+                    contentStyle: { backgroundColor: "#000" },
+                }}
+            />
+            <ScrollView style={styles.container}>
+                <Text style={styles.title}>📊 Egzersiz Raporu</Text>
 
-            {/* Butonlar */}
-            <View style={styles.buttonGroup}>
-                <TouchableOpacity
-                    style={[styles.toggleButton, selectedMove === 'squat' && styles.activeButton]}
-                    onPress={() => setSelectedMove('squat')}
-                >
-                    <Text style={styles.buttonText}>Squat</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.toggleButton, selectedMove === 'bridge' && styles.activeButton]}
-                    onPress={() => setSelectedMove('bridge')}
-                >
-                    <Text style={styles.buttonText}>Bridge</Text>
-                </TouchableOpacity>
-            </View>
+                {/* Butonlar */}
+                <View style={styles.buttonGroup}>
+                    <TouchableOpacity
+                        style={[styles.toggleButton, selectedMove === 'squat' && styles.activeButton]}
+                        onPress={() => setSelectedMove('squat')}
+                    >
+                        <Text style={styles.buttonText}>Squat</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.toggleButton, selectedMove === 'bridge' && styles.activeButton]}
+                        onPress={() => setSelectedMove('bridge')}
+                    >
+                        <Text style={styles.buttonText}>Bridge</Text>
+                    </TouchableOpacity>
+                </View>
 
-            {filteredLogs.length > 0 ? (
-                <>
-                    <LineChart
-                        data={{
-                            labels: filteredLogs.map(log => formatDate(log.date)),
-                            datasets: [{ data: filteredLogs.map(log => log.accuracy) }],
-                        }}
-                        width={Dimensions.get("window").width - 40}
-                        height={220}
-                        yAxisSuffix="%"
-                        chartConfig={chartConfig}
-                        bezier
-                        style={styles.chart}
-                    />
+                {filteredLogs.length > 0 ? (
+                    <>
+                        <LineChart
+                            data={{
+                                labels: filteredLogs.map(log => formatDate(log.date)),
+                                datasets: [{ data: filteredLogs.map(log => log.accuracy) }],
+                            }}
+                            width={Dimensions.get("window").width - 40}
+                            height={220}
+                            yAxisSuffix="%"
+                            chartConfig={chartConfig}
+                            bezier
+                            style={styles.chart}
+                        />
 
-                    {/* İlgili logları listele */}
-                    {filteredLogs.map((log, i) => (
-                        <View key={i} style={styles.card}>
-                            <Text style={styles.text}>📅 {formatDate(log.date)}</Text>
-                            <Text style={styles.text}>✅ Doğru: {log.correct} | ❌ Yanlış: {log.incorrect}</Text>
-                            <Text style={styles.text}>🎯 Doğruluk: {log.accuracy.toFixed(2)}%</Text>
-                        </View>
-                    ))}
-                </>
-            ) : (
-                <Text style={styles.text}>Bu egzersiz için kayıt yok.</Text>
-            )}
-        </ScrollView>
+                        {/* İlgili logları listele */}
+                        {filteredLogs.map((log, i) => (
+                            <View key={i} style={styles.card}>
+                                <Text style={styles.text}>📅 {formatDate(log.date)}</Text>
+                                <Text style={styles.text}>✅ Doğru: {log.correct} | ❌ Yanlış: {log.incorrect}</Text>
+                                <Text style={styles.text}>🎯 Doğruluk: {log.accuracy.toFixed(2)}%</Text>
+                            </View>
+                        ))}
+                    </>
+                ) : (
+                    <Text style={styles.text}>Bu egzersiz için kayıt yok.</Text>
+                )}
+            </ScrollView>
+        </>
     );
 }
 

@@ -18,6 +18,8 @@ export default function MovementDetail() {
             <Stack.Screen
                 options={{
                     title: "Hareket Detayı",
+                    headerStyle: { backgroundColor: "#000" },
+                    headerTintColor: "#fff",
                     contentStyle: { backgroundColor: "#000" },
                 }}
             />

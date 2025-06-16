@@ -1,4 +1,3 @@
-import { useLayoutEffect } from 'react';
 import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -131,7 +130,9 @@ export default function ExerciseCameraScreen() {
             <Stack.Screen
                 options={{
                     title: 'Pose Care',
-                    contentStyle: { backgroundColor: '#000' },
+                    headerStyle: { backgroundColor: '#000' },
+                    headerTintColor: "#fff",
+                    contentStyle: { backgroundColor: "#000" },
                     headerRight: () => (
                         <TouchableOpacity
                             onPress={async () => {

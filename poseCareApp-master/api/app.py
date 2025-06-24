@@ -39,13 +39,15 @@ def log_request_info():
 DOWN_THRESHOLD = 150.0
 UP_THRESHOLD = 165.0
 
+
 class Session:
     def __init__(self):
         self.correct = 0
         self.incorrect = 0
         self.temp_squat_angles = []
+        self.temp_bridge_angles = []  # Bu şart
         self.last_status = ""
-        self.wrong_angles = []  # yeni eklendi
+        self.wrong_angles = []
 
 
 
@@ -94,15 +96,28 @@ def analyze_squat(kpts, session: Session):
  
 
 def analyze_bridge(kpts, session: Session):
-    angle = calculate_angle(kpts[6], kpts[12], kpts[14])
-    if angle > 150:
-        session.correct += 1
-        session.last_status = "✔ Doğru bridge"
+    angle = calculate_angle(kpts[11], kpts[13], kpts[15])  # Shoulder - Hip - Knee (sağ taraf)
+    status = None
+
+    # Eğer kişi tamamen yere inmişse (sırt düz), hareket bitmiş demektir
+    if angle < 140:
+        if session.temp_bridge_angles:
+            # temp açılarda doğru açıya ulaşıldı mı kontrol et
+            if any(a >= 160 for a in session.temp_bridge_angles):
+                session.correct += 1
+                status = "✔ Doğru bridge"
+            else:
+                session.incorrect += 1
+                session.wrong_angles.extend(session.temp_bridge_angles)
+                status = "❌ Yanlış bridge"
+            session.temp_bridge_angles.clear()  # yeni tekrar için sıfırla
+
+    # Eğer açı hala yüksekse, kişi hareketin içinde
     else:
-        session.incorrect += 1
-        session.wrong_angles.append(angle)  # hatalı açı kaydı eklendi
-        session.last_status = "❌ Yanlış bridge"
-    return angle, session.last_status
+        session.temp_bridge_angles.append(angle)
+
+    return angle, status
+
 
 
 @app.route('/pose', methods=['POST'])

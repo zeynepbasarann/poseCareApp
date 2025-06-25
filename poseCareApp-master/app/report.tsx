@@ -45,8 +45,6 @@ export default function ReportScreen() {
             />
             <ScrollView style={styles.container}>
                 <Text style={styles.title}>📊 Egzersiz Raporu</Text>
-
-                {/* Butonlar */}
                 <View style={styles.buttonGroup}>
                     <TouchableOpacity
                         style={[styles.toggleButton, selectedMove === 'squat' && styles.activeButton]}
@@ -77,7 +75,7 @@ export default function ReportScreen() {
                             style={styles.chart}
                         />
 
-                        {/* İlgili logları listele */}
+
                         {filteredLogs.map((log, i) => (
                             <View key={i} style={styles.card}>
                                 <Text style={styles.text}>📅 {formatDate(log.date)}</Text>

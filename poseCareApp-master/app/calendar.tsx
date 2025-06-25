@@ -152,12 +152,12 @@ export default function CalendarScreen() {
                         />
                         <TouchableOpacity
                             style={{
-                                backgroundColor: '#FFFFFF', // İstediğin renk
+                                backgroundColor: '#FFFFFF',
                                 padding: 12,
                                 borderRadius: 8,
                                 alignItems: 'center',
                                 marginTop: 16,
-                                marginBottom: 30, // Alt boşluk
+                                marginBottom: 30,
                                 marginHorizontal: 20
 
                             }}
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff",
         borderRadius: 8,
         paddingHorizontal: 10,
-        paddingVertical: 12, // yüksekliği artırdık
+        paddingVertical: 12,
         marginTop: 5,
         fontSize: 16,
     },

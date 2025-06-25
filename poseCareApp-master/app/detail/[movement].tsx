@@ -10,7 +10,7 @@ export default function MovementDetail() {
         } else if (movement === "Bridge") {
             return require("../../assets/images/bridge.jpeg");
         } else {
-            return require("../../assets/images/icon.png"); // yedek resim
+            return require("../../assets/images/icon.png");
         }
     };
     return (
@@ -38,7 +38,7 @@ export default function MovementDetail() {
                 <Text style={{ color: "#ccc", marginBottom: 24, textAlign: "center", fontWeight: "bold" }}>{reps} tekrar</Text>
                 <Pressable
                     onPress={() => {
-                        const selectedOption = typeof movement === "string" ? movement : "default"; // Ensure selectedOption is a string
+                        const selectedOption = typeof movement === "string" ? movement : "default";
                         router.push({
                             pathname: "/exercise",
                             params: { exercise: selectedOption.toLowerCase() },

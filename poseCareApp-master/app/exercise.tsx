@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ExerciseCameraScreen() {
-    const { exercise, target } = useLocalSearchParams(); // squat / bridge
+    const { exercise, target } = useLocalSearchParams();
     const [permission, requestPermission] = useCameraPermissions();
     const cameraRef = useRef<CameraView | null>(null);
     const isCapturingRef = useRef(false);
@@ -68,7 +68,6 @@ export default function ExerciseCameraScreen() {
         }
     };
 
-    // Component mount'ta session reset ve state sıfırlama
     useEffect(() => {
         fetch(`${BASE_URL}/reset_session`, { method: 'POST' })
             .then(() => {
@@ -80,7 +79,6 @@ export default function ExerciseCameraScreen() {
             .catch((e) => console.error('Reset error:', e));
     }, []);
 
-    // 700ms'de bir capture ve gönderme
     useEffect(() => {
         const interval = setInterval(() => {
             captureAndSendFrame();
@@ -92,7 +90,7 @@ export default function ExerciseCameraScreen() {
         if (counts.correct >= targetCount) {
             const resetAndRedirect = async () => {
                 try {
-                    await fetch(`${BASE_URL}/reset_session`, { method: 'POST' }); // await eklendi
+                    await fetch(`${BASE_URL}/reset_session`, { method: 'POST' });
                 } catch (e) {
                     console.error('Reset error:', e);
                 } finally {
@@ -113,7 +111,7 @@ export default function ExerciseCameraScreen() {
 
 
 
-    // Kamera izni yoksa izin isteme ekranı
+
     if (!permission?.granted) {
         return (
             <View style={styles.centered}>
